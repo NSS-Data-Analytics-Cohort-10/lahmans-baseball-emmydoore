@@ -92,14 +92,42 @@ order by successful_attempts_percentage desc;
 select name as team_name,sum(w) as total_wins, yearid as year,wswin as world_series_win
 from teams
 where yearid between 1970 and 2016
+and wswin='N'
 group by name, yearid,wswin
-order by total_wins desc
---Answer:
+order by total_wins desc;
+--Answer: Seattle Mariners won 116 games in 2001 but did not win the World Series
 
-select wswin, t.name,yearid,sum(w)
+
+select name as team_name,sum(w) as total_wins, yearid as year,wswin as world_series_win
+from teams
+where yearid between 1970 and 2016
+and wswin='Y'
+group by name, yearid, wswin
+order by total_wins;
+--Answer: The LA Dodgers had the least amount of wins but still won the world series in 1981. This can be contributed to the player's strike that year which resulted in less games being played
+
+
+select name as team_name,sum(w) as total_wins, yearid as year,wswin as world_series_win
+from teams
+where yearid between 1970 and 2016
+and yearid not in (1981)
+and wswin='Y'
+group by name, yearid, wswin
+order by total_wins;
+--Answer: Excluding 1981, the St. Louis Cardinals had the lowest amount of wins (86) while also winning the World Series in 2006
+
+with max_wins as (
+select name as team_name, max(w) as total_wins, yearid as year,wswin as world_series_win, teamid
 from teams as t
-group by t.name, yearid, wswin
-order by name 
+where yearid between 1970 and 2016
+and wswin='Y'
+group by name, yearid, wswin,teamid
+order by yearid desc)
+select count(total_wins)*100/count(yearid)
+from seriespost as sp
+inner join max_wins as mw
+on sp.yearid = mw.year
+--Answer: 100%
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
 
