@@ -116,31 +116,80 @@ group by name, yearid, wswin,w
 order by yearid;
 --Answer: Excluding 1981, the St. Louis Cardinals had the lowest amount of wins (86) while also winning the World Series in 2006
 
-with most_wins as(
-select t.name, t.yearid,t.teamid
+
+--How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
+
+
+select count(t.name)
 from teams as t
 inner join seriespost as s
 on t.yearid = s.yearid and t.teamid = s.teamidwinner and s.round='WS'
 where t.w = (select max(w)
 			from teams
-			where yearid = t.yearid and s.yearid<>1981 and t.yearid between 1970 and 2016))
+			where yearid = t.yearid and s.yearid<>1981 and t.yearid>=1970)
 --There are 12 teams that had the most wins and won the world series
 
-select count (distinct yearid)
-from seriespost
+
+select count(distinct yearid)
+from teams
 where yearid>=1970 
 and yearid<>1981
---45
+--46 world series between 1970 and 2016
 
---Answer: 26% of teams have won the most games and the world series
+--Answer:(12/46)*100= 26.09% of teams that had the most wins in one season also won the world series.
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
 
---Answer:
+select  park_name,t.name as team_name, sum(h.attendance)/sum(h.games) as avg_attendance
+from homegames as h
+inner join teams as t
+on h.team=t.teamid and h.year=t.yearid
+inner join parks as p
+on h.park=p.park
+where year=2016
+and games>=10
+group by park_name,t.name
+order by avg_attendance desc
+limit 5;
+
+
+select  park_name,t.name as team_name, sum(h.attendance)/sum(h.games) as avg_attendance
+from homegames as h
+inner join teams as t
+on h.team=t.teamid and h.year=t.yearid
+inner join parks as p
+on h.park=p.park
+where year=2016
+and games>=10
+group by park_name,t.name
+order by avg_attendance
+limit 5;
 
 -- 9. Which managers have won the TSN Manager of the Year award in both the National League (NL) and the American League (AL)? Give their full name and the teams that they were managing when they won the award.
 
---Answer:
+select p.namefirst || ' ' || p.namelast as name,
+		a.lgid, 
+		t.name as team_name,
+		a.yearid
+from awardsmanagers as a
+left join people as p
+using (playerid)
+left join managers as m
+using (yearid,lgid) 
+left join teams as t
+using (teamid, yearid)
+where a.playerid in (
+		select playerid
+		from awardsmanagers
+		where awardid= 'TSN Manager of the Year'
+		group by playerid
+		having count(distinct lgid) >1)
+and a.lgid<> 'ML'
+and a.playerid = m.playerid
+group by p.namefirst,p.namelast,a.lgid,a.yearid,t.name
+order by p.namefirst
+
+
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
