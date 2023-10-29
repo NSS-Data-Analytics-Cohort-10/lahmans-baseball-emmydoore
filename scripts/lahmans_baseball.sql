@@ -119,24 +119,25 @@ order by yearid;
 
 --How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? What percentage of the time?
 
-
-select count(t.name)
-from teams as t
-inner join seriespost as s
-on t.yearid = s.yearid and t.teamid = s.teamidwinner and s.round='WS'
-where t.w = (select max(w)
-			from teams
-			where yearid = t.yearid and s.yearid<>1981 and t.yearid>=1970)
---There are 12 teams that had the most wins and won the world series
-
-
-select count(distinct yearid)
+with mw as (
+select yearid, max(w) as max_wins
 from teams
-where yearid>=1970 
-and yearid<>1981
---46 world series between 1970 and 2016
-
---Answer:(12/46)*100= 26.09% of teams that had the most wins in one season also won the world series.
+where yearid>=1970 and yearid <>1981
+group by yearid),
+wc as (
+select teamid,yearid,w,wswin
+from teams
+where yearid between 1970 and 2016 and yearid<>1981)
+select 
+sum(case when wswin='Y' then 1 else 0 end) as max_wins_and_won_ws,
+count(distinct wc.yearid) as total_ws,
+Round(sum(case when wswin='Y' then 1 else 0 end)/
+count(distinct wc.yearid)::numeric,2)*100 as percent_max_wins_and_ws_win
+from mw
+left join wc
+on mw.yearid=wc.yearid and mw.max_wins=wc.w
+where mw.max_wins is not null;
+--Answer: out of 46 world series, 12 teams with the most wins that season also won the world series or 26% of teams
 
 -- 8. Using the attendance figures from the homegames table, find the teams and parks which had the top 5 average attendance per game in 2016 (where average attendance is defined as total attendance divided by number of games). Only consider parks where there were at least 10 games played. Report the park name, team name, and average attendance. Repeat for the lowest 5 average attendance.
 
@@ -187,13 +188,40 @@ where a.playerid in (
 and a.lgid<> 'ML'
 and a.playerid = m.playerid
 group by p.namefirst,p.namelast,a.lgid,a.yearid,t.name
-order by p.namefirst
+order by p.namefirst;
 
 
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
+with mhr as (
+select playerid, max(hr) as max_hr
+from batting
+group by playerid
+order by max_hr desc)
+select p.namefirst || ' ' || p.namelast as name,sum(hr) as total_home_runs,max_hr,yearid
+from people as p
+inner join batting as b
+using (playerid)
+inner join mhr
+using (playerid)
+where yearid=2016
+and debut>='2016-01-01'
+group by p.namefirst,p.namelast,yearid,max_hr
+having sum(hr)>=1
+and sum(hr)=max_hr
+order by total_home_runs desc
+
 --Answer:
+
+-- test
+-- select p.namefirst || ' ' || p.namelast as name, max(hr) as max_hr,yearid
+-- from batting
+-- inner join people as p
+-- using (playerid)
+-- group by p.namefirst,p.namelast,yearid
+-- having max(hr)=20
+-- order by p.namefirst 
 
 -- **Open-ended questions**
 
