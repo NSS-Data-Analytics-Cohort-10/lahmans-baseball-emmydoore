@@ -168,7 +168,7 @@ limit 5;
 
 -- 9. Which managers have won the TSN Manager of the Year award in both the National League (NL) and the American League (AL)? Give their full name and the teams that they were managing when they won the award.
 
-select p.namefirst || ' ' || p.namelast as name,
+select p.namefirst ||' '|| p.namelast as name,
 		a.lgid, 
 		t.name as team_name,
 		a.yearid
@@ -204,7 +204,7 @@ where yearid=2016
 		group by playerid
 		having count(distinct yearid)>=10)
 group by playerid)
-select p.namefirst || ' ' || p.namelast as name,max_hr as max_career_homerun
+select p.namefirst ||' '|| p.namelast as name,max_hr as max_career_homerun
 from batting as b
 inner join mhr
 using (playerid)
@@ -213,7 +213,7 @@ using (playerid)
 where max_hr>=1 
 group by p.namefirst, p.namelast,max_hr
 having max_hr=max(hr)
-order by max_career_homerun desc
+order by max_career_homerun desc;
 
 -- **Open-ended questions**
 
