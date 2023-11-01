@@ -194,34 +194,26 @@ order by p.namefirst;
 
 -- 10. Find all players who hit their career highest number of home runs in 2016. Consider only players who have played in the league for at least 10 years, and who hit at least one home run in 2016. Report the players' first and last names and the number of home runs they hit in 2016.
 
-with mhr as (
-select playerid, max(hr) as max_hr
+ with mhr as 
+(select playerid, max(hr) as max_hr
 from batting
-group by playerid
-order by max_hr desc)
-select p.namefirst || ' ' || p.namelast as name,sum(hr) as total_home_runs,max_hr,yearid
-from people as p
-inner join batting as b
-using (playerid)
+where yearid=2016
+ and playerid in 
+ 		(select playerid
+		from batting
+		group by playerid
+		having count(distinct yearid)>=10)
+group by playerid)
+select p.namefirst || ' ' || p.namelast as name,max_hr as max_career_homerun
+from batting as b
 inner join mhr
 using (playerid)
-where yearid=2016
-and debut>='2016-01-01'
-group by p.namefirst,p.namelast,yearid,max_hr
-having sum(hr)>=1
-and sum(hr)=max_hr
-order by total_home_runs desc
-
---Answer:
-
--- test
--- select p.namefirst || ' ' || p.namelast as name, max(hr) as max_hr,yearid
--- from batting
--- inner join people as p
--- using (playerid)
--- group by p.namefirst,p.namelast,yearid
--- having max(hr)=20
--- order by p.namefirst 
+inner join people as p
+using (playerid)
+where max_hr>=1 
+group by p.namefirst, p.namelast,max_hr
+having max_hr=max(hr)
+order by max_career_homerun desc
 
 -- **Open-ended questions**
 
@@ -234,4 +226,14 @@ order by total_home_runs desc
 
 -- 13. It is thought that since left-handed pitchers are more rare, causing batters to face them less often, that they are more effective. Investigate this claim and present evidence to either support or dispute this claim. First, determine just how rare left-handed pitchers are compared with right-handed pitchers. Are left-handed pitchers more likely to win the Cy Young Award? Are they more likely to make it into the hall of fame?
 
+  select count(distinct playerid)
+  from people
+  where throws='L'
+
+ select count(distinct playerid)
+  from people
+  where throws='R'
   
+select count
+select throws
+from people
