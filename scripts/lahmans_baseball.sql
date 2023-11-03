@@ -219,6 +219,31 @@ order by max_career_homerun desc;
 
 -- 11. Is there any correlation between number of wins and team salary? Use data from 2000 and later to answer this question. As you do this analysis, keep in mind that salaries across the whole league tend to increase together, so you may want to look on a year-by-year basis.
 
+
+with ssal as (
+select sum(salary) as total_salary,teamid,yearid
+from salaries
+where yearid>=2000
+group by teamid, yearid
+order by yearid, total_salary),
+swins as (
+select sum(w) as total_wins,teamid,yearid
+from teams
+where yearid>=2000
+group by teamid,yearid
+order by yearid, total_wins)
+
+select swins.teamid, swins.yearid, total_salary, total_wins
+from ssal
+inner join swins
+using (teamid,yearid)
+where swins.yearid=2001
+and total_salary in (
+select max(total_salary)
+	from ssal)
+order by total_salary desc, total_wins desc
+
+
 -- 12. In this question, you will explore the connection between number of wins and attendance.
 --       Does there appear to be any correlation between attendance at home games and number of wins?
 --       Do teams that win the world series see a boost in attendance the following year? What about teams that made the playoffs? Making the playoffs means either being a division winner or a wild card winner.
@@ -226,14 +251,14 @@ order by max_career_homerun desc;
 
 -- 13. It is thought that since left-handed pitchers are more rare, causing batters to face them less often, that they are more effective. Investigate this claim and present evidence to either support or dispute this claim. First, determine just how rare left-handed pitchers are compared with right-handed pitchers. Are left-handed pitchers more likely to win the Cy Young Award? Are they more likely to make it into the hall of fame?
 
-  select count(distinct playerid)
-  from people
-  where throws='L'
+--   select count(distinct playerid)
+--   from people
+--   where throws='L'
 
- select count(distinct playerid)
-  from people
-  where throws='R'
+--  select count(distinct playerid)
+--   from people
+--   where throws='R'
   
-select count
-select throws
-from people
+-- select count
+-- select throws
+-- from people
